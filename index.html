@@ -1,436 +1,302 @@
 <!DOCTYPE html>
-<html>
-	<meta charset="utf-8">
-	<title>Wine Varieties</title>
-	<head>
-		<style>
-      #speciescollapsible{
-        background-color:#272822;
-        height: 720px;
-        width: 1080px;
-        overflow: hidden;
-      
-      }
-      .selected{
-        stroke:rgb(82, 0, 0);
-        fill: none;
-        stroke-width: 4px;
-      }
-      
-      .reset-selected{
-        fill: none;
-        stroke:rgb(255, 255, 255);
-        stroke-width: 1px;
-      }
-      
-      
-      .node {
-        cursor: pointer;
-      }
-      
-      
-      .node text {
-      
-      text-rendering: optimizeLegibility;
-      font: 1em Menlo, Vera Sans Mono;
-      background-color: transparent;
-      fill:rgb(255, 255, 255);
-      -webkit-font-smoothing: antialiased;
-      font-weight: bold;
-      
-      }      
-      .link {
-        fill: none;
-        stroke: rgb(53, 0, 0);
-        stroke-width: 1px;
-      }
-      
-      #collapse-button{
-      float: right;
-      margin-right: 10px;
-      margin-top: 20px;
-      
-      }
-		</style>
-	</head>
-	<body>
-		<div id ="speciescollapsible"></div>
-	</body>
-
-	<script src="http://blog.pixelingene.com/demos/d3_tree_clipPath/lib/underscore-min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
-	<script>
-	(function(){
-
-
-  var radius = 400;
-  var dendogramContainer = "speciescollapsible";
-  var dendogramDataSource = "wine_tree.json";
-
-  var rootNodeSize = 20;
-  var levelOneNodeSize = 12;
-  var levelTwoNodeSize = 10;
-  var levelThreeNodeSize = 7;
-
-
-  var i = 0;
-  var duration = 300; //Changing value doesn't seem any changes in the duration ??
-
-  var rootJsonData;
-
-  var cluster = d3.layout.cluster()
-      .size([360,radius - 120])
-      .separation(function(a, b) {
-        return (a.parent == b.parent ? 1 : 2) / a.depth;
-      });
-
-  var diagonal = d3.svg.diagonal.radial()
-      .projection(function(d) { return [d.y, d.x / 180 * Math.PI]; });
-
-  var containerDiv = d3.select(document.getElementById(dendogramContainer));
-
-  containerDiv.append("button")
-      .attr("id","collapse-button")
-      .text("Collapse!")
-      .on("click",collapseLevels);
-
-  var svgRoot = containerDiv.append("svg:svg")
-      .attr("width", "90%")
-      .attr("height", "90%")
-      .attr("viewBox", "-" + (radius) + " -" + (radius - 50) +" "+ radius*2 +" "+ radius*2)
-      .call(d3.behavior.zoom().scale(0.9).scaleExtent([0.1, 3]).on("zoom", zoom)).on("dblclick.zoom", null)
-      .append("svg:g");
-
-  // Add the clipping path
-  svgRoot.append("svg:clipPath").attr("id", "clipper-path")
-      .append("svg:rect")
-      .attr('id', 'clip-rect-anim');
-
-  var animGroup = svgRoot.append("svg:g")
-      .attr("clip-path", "url(#clipper-path)");
-
-  d3.json(dendogramDataSource, function(error,jsonData){
-  	if(error) return console.warn(error);
-  	rootJsonData = jsonData;
-
-    //Start with all children collapsed
-    rootJsonData.children.forEach(collapse);
-
-    //Initialize the dendrogram
-  	createCollapsibleDendroGram(rootJsonData);
-
-  });
-
-
-  function createCollapsibleDendroGram(source) {
-
-    // Compute the new tree layout.
-    var nodes = cluster.nodes(rootJsonData);
-    var pathlinks = cluster.links(nodes);
-
-    // Normalize for nodes' fixed-depth.
-    nodes.forEach(function(d) {
-      if(d.depth <=2){
-        d.y = d.depth*70;
-      }else
-      {
-        d.y = d.depth*100;
-      }
-    });
-
-    // Update the nodes…
-    var node = svgRoot.selectAll("g.node")
-        .data(nodes, function(d) { return d.id || (d.id = ++i); });
-
-    // Enter any new nodes at the parent's previous position.
-    var nodeEnter = node.enter().append("g")
-        .attr("class", "node")
-        .on("click", toggleChildren);
-
-    nodeEnter.append("circle");
-
-    nodeEnter.append("text")
-    .attr("x", 10)
-    .attr("dy", ".35em")
-    .attr("text-anchor", "start")
-    .text(function(d) {
-          if(d.depth === 2){
-            return d.alias;
-          }
-         return d.name;
-    });
-
-
-    // Transition nodes to their new position.
-    var nodeUpdate = node.transition()
-        .duration(duration)
-        .attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
-
-    nodeUpdate.select("circle")
-        .attr("r", function(d){
-            if (d.depth == 0) {
-                return rootNodeSize;
-              }
-              else if (d.depth === 1) {
-                  return levelOneNodeSize;
-              }
-              else if (d.depth === 2) {
-                  return levelTwoNodeSize;
-              }
-                  return levelThreeNodeSize;
-
-        })
-        .style("fill", function(d) {
-               return "#F8F8F2"
-        })
-        .style("stroke",function(d){
-              if(d.depth>1){
-                  return "black";
-              }
-              else{
-                  return "black";
-              }
-        });
-
-    nodeUpdate.select("text")
-
-        .attr('id', function(d){
-          var order = 0;
-          if(d.order)order = d.order;
-          return 'T-' + d.depth + "-" + order;
-        })
-        .attr("text-anchor", function (d) {
-            if (d.depth === 1) {
-                return d.x < 180 ? "end" : "start";
-            }
-            return d.x < 180 ? "start" : "end";
-        })
-        .attr("dy", function(d){
-            if (d.depth === 1) {
-                return d.x < 180 ? "1.4em" : "-0.2em";
-            }
-            return ".31em";
-        })
-        .attr("dx", function (d) {
-            if (d.depth === 1) {
-                return 0; //return d.x > 180 ? 2 : -2;
-            }
-            return d.x < 180 ? 1 : -20;
-        })
-        .attr("transform", function (d) {
-            if (d.depth < 2) {
-                return "rotate(" + (90 - d.x) + ")";
-            }else {
-                return d.x < 180 ? null : "rotate(180)";
-            }
-        });
-
-    // TODO: appropriate transform
-    var nodeExit = node.exit().transition()
-        .duration(duration)
-        .remove();
-
-    // Update the links…
-    var link = svgRoot.selectAll("path.link")
-        .data(pathlinks, function(d) { return d.target.id; });
-
-    // Enter any new links at the parent's previous position.
-    link.enter().insert("path", "g")
-        .attr("class", "link")
-        .attr("d", function(d) {
-          var o = {x: source.x0, y: source.y0};
-          return diagonal({source: o, target: o});
-        })
-        .style("fill",function(d){
-          return d.color;
-        });
-
-    // Transition links to their new position.
-    link.transition()
-        .duration(duration)
-        .attr("d", diagonal);
-
-    // Transition exiting nodes to the parent's new position.
-    link.exit().transition()
-        .duration(duration)
-        .attr("d", function(d) {
-          var o = {x: source.x, y: source.y};
-          return diagonal({source: o, target: o});
-        })
-        .remove();
-  }
-
-  // Toggle children on click.
-  function toggleChildren(d,clickType) {
-    if (d.children) {
-      d._children = d.children;
-      d.children = null;
-    } else {
-      d.children = d._children;
-      d._children = null;
-    }
-
-    var type = typeof clickType == undefined ? "node" : clickType;
-
-    //Activities on node click
-    createCollapsibleDendroGram(d);
-    highlightNodeSelections(d);
-
-    highlightRootToNodePath(d,type);
-
-  }
-
-  // Collapse nodes
-  function collapse(d) {
-    if (d.children) {
-        d._children = d.children;
-        d._children.forEach(collapse);
-        d.children = null;
-      }
-  }
-
-
-  // highlights subnodes of a node
-  function highlightNodeSelections(d) {
-      var highlightLinkColor = "darkslategray";//"#f03b20";
-      var defaultLinkColor = "lightgray";
-
-      var depth =  d.depth;
-      var nodeColor = d.color;
-      if (depth === 1) {
-          nodeColor = highlightLinkColor;
-      }
-
-      var pathLinks = svgRoot.selectAll("path.link");
-
-      pathLinks.style("stroke",function(dd) {
-            return "#E6E6E6";
-      });
-  }
-
-  //Walking parents' chain for root to node tracking
-  function highlightRootToNodePath(d,clickType){
-    var ancestors = [];
-    var parent = d;
-    while (!_.isUndefined(parent)) {
-        ancestors.push(parent);
-        parent = parent.parent;
-    }
-
-    // Get the matched links
-    var matchedLinks = [];
-
-    svgRoot.selectAll('path.link')
-        .filter(function(d, i)
-        {
-            return _.any(ancestors, function(p)
-            {
-                return p === d.target;
-            });
-
-        })
-        .each(function(d)
-        {
-            matchedLinks.push(d);
-        });
-
-    animateChains(matchedLinks,clickType);
-
-    function animateChains(links,clickType){
-      animGroup.selectAll("path.selected")
-          .data([])
-          .exit().remove();
-
-      animGroup.selectAll("path.selected")
-          .data(links)
-          .enter().append("svg:path")
-          .attr("class", "selected")
-          .attr("d", diagonal);
-
-
-      //Reset path highlight if collapse button clicked
-      if(clickType == 'button'){
-        animGroup.selectAll("path.selected").classed('reset-selected',true);
-      }
-
-      var overlayBox = svgRoot.node().getBBox();
-
-      svgRoot.select("#clip-rect-anim")
-          .attr("x", -radius)
-          .attr("y", -radius)
-          .attr("width",0)
-          .attr("height",radius*2)
-          .transition().duration(duration)
-          .attr("width", radius*2);
-    }
-
-  }
-
-  function zoom() {
-     svgRoot.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-  }
-
-  function collapseLevels(){
-
-    if(checkForThirdLevelOpenChildren()){
-      toggleAllSecondLevelChildren();
-    }else{
-     toggleSecondLevelChildren();
-    }
-
-    // Open first level only by collapsing second level
-    function toggleSecondLevelChildren(){
-      for(rootIndex = 0, rootLength = rootJsonData.children.length; rootIndex<rootLength; rootIndex++){
-          if(isNodeOpen(rootJsonData.children[rootIndex])){
-               toggleChildren(rootJsonData.children[rootIndex],'button');
-          }
-      }
-    }
-
-    // Open first level only by collapsing second level
-    function toggleAllSecondLevelChildren(){
-      for(rootIndex = 0, rootLength = rootJsonData.children.length; rootIndex<rootLength; rootIndex++){
-        if(isNodeOpen(rootJsonData.children[rootIndex])){
-
-          for(childIndex = 0, childLength = rootJsonData.children[rootIndex].children.length; childIndex<childLength; childIndex++){
-            var secondLevelChild = rootJsonData.children[rootIndex].children[childIndex];
-            if(isNodeOpen(secondLevelChild)){
-              toggleChildren(rootJsonData.children[rootIndex].children[childIndex],'button');
-            }
-          }
-
-        }
-
-      }
-    }
-
-    // Check if any nodes opens at second level
-    function checkForThirdLevelOpenChildren(){
-      for(rootIndex = 0, rootLength = rootJsonData.children.length; rootIndex<rootLength; rootIndex++){
-        if(isNodeOpen(rootJsonData.children[rootIndex])){
-
-          for(childIndex = 0, childLength = rootJsonData.children[rootIndex].children.length; childIndex<childLength; childIndex++){
-
-            var secondLevelChild = rootJsonData.children[rootIndex].children[childIndex];
-            if(isNodeOpen(secondLevelChild)){
-              return true;
-            }
-          }
-        }
-      }
-    }
-
-    function isNodeOpen(d){
-      if(d.children){return true;}
-      return false;
-    }
-  }
-
-
-
-
-})();
-	
-	</script>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>inQuire</title>
+
+  <!-- Bootstrap -->
   
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/animate.css">
+  <link rel="stylesheet" href="css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/jquery.bxslider.css">
+  <link rel="stylesheet" type="text/css" href="css/normalize.css" />
+  <link rel="stylesheet" type="text/css" href="css/demo.css" />
+  <link rel="stylesheet" type="text/css" href="css/set1.css" />
+  <link href="css/overwrite.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+  
+  <!-- =======================================================
+    Theme Name: eNno
+    Theme URL: https://bootstrapmade.com/enno-free-simple-bootstrap-template/
+    Author: BootstrapMade
+    Author URL: https://bootstrapmade.com
+  ======================================================= -->
+</head>
+
+<body>
+  <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse.collapse">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+        <a class="navbar-brand" href="index.html"><span>inQuire</span></a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <div class="menu">
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="index.html">Home</a></li>
+            <li role="presentation"><a href="portfolio.html">Portfolio</a></li>
+            <li role="presentation"><a href="skills.html">Skills</a></li>
+            <li role="presentation"><a href="blog.html">Blog</a></li>
+            <li role="presentation"><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+ <!-- <div class="owl-carousel owl-theme">
+      <div class="container">
+          <div class="row">
+            <div class="slider">
+                <ul class="owl-carousel">
+      <div><img src = "img/01.jpg"></div>
+      <div> <img src = "img/01.jpg"></div>
+      <div><img src = "img/01.jpg"></div>
+      <div> <img src = "img/01.jpg"></div>
+      <div> <img src = "img/01.jpg"> </div>
+      <div> <img src = "img/01.jpg"></div>
+      <div> <img src = "img/01.jpg"> </div>
+      </ul>
+    </div>
+  </div>
+</div>
+    </div>-->
+  <div class="container">
+      <div class="row">
+        <div class="slider">
+          <div class="img-responsive">
+            <ul class="bxslider">
+              <li><img src="img/lady_tech_screen2.jpg" alt=""class = "ri"/></li>
+              <li><img src="img/pensive_lady.jpg" alt=""class="ri"/></li>
+              <li><img src="img/tech_screen_again.jpg" alt="" class="ri"/></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div> 
+
+
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 col-md-offset-3">
+        <div class="text-center">
+          <h2>A Deep Dive with Data</h2>
+          <p>Comprehensive, Objective Analysis and Interactive Visualization<br> vestibulum volutpat libero sollicitudin vitae Curabitur ac aliquam <br> lorem sit amet scelerisque justo</p>
+        </div>
+        <hr>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="row">
+      <div class="box">
+        <div class="col-md-4">
+          <div class="wow bounceIn" data-wow-offset="0" data-wow-delay="0.4s">
+            <h4>Inspired</h4>
+            <div class="icon">
+              <i class="fa fa-heart-o fa-3x"></i>
+            </div>
+            <p>Lorem ipsum dolor sit amet consectetur adipiscing elit Cras suscipit arcu libero</p>
+            <div class="ficon">
+              <a href="#" class="collapsible collapsible-default" role="button">Read more</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="wow bounceIn" data-wow-offset="0" data-wow-delay="1.0s">
+            <h4>Interactive Visuals</h4>
+            <div class="icon">
+              <i class="fa fa-desktop fa-3x"></i>
+            </div>
+            <p>Fun, interactive visuals engage the audience and encourages them to explore and learn more about the findings</p>
+            <div class="ficon">
+              <a href="#" class="collapsible collapsible-default" role="button">Read more</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="wow bounceIn" data-wow-offset="0" data-wow-delay="1.6s">
+            <h4>Representative Data</h4>
+            <div class="icon">
+              <i class="fa fa-area-chart fa-3x"></i>
+            </div>
+            <p>Data is cleansed and compiled in a scientific, unbiased manner to present the facts</p>
+            <div class="ficon">
+              <a href="#" class="collapsible collapsible-default" role="button">Read more</a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 col-md-offset-3">
+        <div class="text-center">
+          <h2>Projects</h2>
+          <p>Lorem ipsum dolor sit amet consectetur adipiscing elit Cras suscipit arcu<br> vestibulum volutpat libero sollicitudin vitae Curabitur ac aliquam <br>
+          </p>
+        </div>
+      <hr>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="grid">
+      <figure class="effect-zoe">
+        <img src="img/wine_category_treemap.jpg" alt="wine_category_treemap" />
+        <figcaption>
+          <h2>json <span>Treemap</span></h2>
+          <p class="icon-links">
+            <a href="#"><span class="icon-heart"></span></a>
+            <a href="#"><span class="icon-eye"></span></a>
+            <a href="#"><span class="icon-paper-clip"></span></a>
+          </p>
+          <p class="description">Zoe never had the patience of her sisters. She deliberately punched the bear in his face.</p>
+        </figcaption>
+      </figure>
+      <figure class="effect-zoe">
+        <img src="img/international_wine_analysis_scatterplot.jpg" alt="international_wine_analysis_scatterplot" />
+        <figcaption>
+          <h2>d3 <span>Scatterplot</span></h2>
+          <p class="icon-links">
+            <a href="#"><span class="icon-heart"></span></a>
+            <a href="#"><span class="icon-eye"></span></a>
+            <a href="#"><span class="icon-paper-clip"></span></a>
+          </p>
+          <p class="description">Zoe never had the patience of her sisters. She deliberately punched the bear in his face.</p>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="grid">
+      <figure class="effect-zoe">
+        <img src="img//traffic_fatality_sunburst.jpg" alt="traffic_fatality_sunburst" />
+        <figcaption>
+          <h2>Auto-<span>Sunburst</span></h2>
+          <p class="icon-links">
+            <a href="#"><span class="icon-heart"></span></a>
+            <a href="#"><span class="icon-eye"></span></a>
+            <a href="#"><span class="icon-paper-clip"></span></a>
+          </p>
+          <p class="description">Zoe never had the patience of her sisters. She deliberately punched the bear in his face.</p>
+        </figcaption>
+      </figure>
+      <figure class="effect-zoe">
+        <img src="img/drunk_driving_accidents_by_state.jpg" alt="drunk_driving_accidents_by_state" />
+        <figcaption>
+          <h2>d3 <span>Bargraph</span></h2>
+          <p class="icon-links">
+            <a href="#"><span class="icon-heart"></span></a>
+            <a href="#"><span class="icon-eye"></span></a>
+            <a href="#"><span class="icon-paper-clip"></span></a>
+          </p>
+          <p class="description">Zoe never had the patience of her sisters. She deliberately punched the bear in his face.</p>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <footer>
+    <div class="inner-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-4 f-about">
+            <a href="index.html"><h1><span>e</span>Nno</h1></a>
+            <p>Lorem ipsum dolor sit amet consectetur adipiscing elit Cras suscipit arcu libero vestibulum volutpat libero sollicitudin vitae Curabitur ac aliquam consectetur adipiscing elit Cras suscipit arcu libero
+            </p>
+          </div>
+          <div class="col-md-4 l-posts">
+            <h3 class="widgetheading">Latest Posts</h3>
+            <ul>
+              <li><a href="#">This is awesome post title</a></li>
+              <li><a href="#">Awesome features are awesome</a></li>
+              <li><a href="#">Create your own awesome website</a></li>
+              <li><a href="#">Wow, this is fourth post title</a></li>
+            </ul>
+          </div>
+          <div class="col-md-4 f-contact">
+            <h3 class="widgetheading">Stay in touch</h3>
+            <a href="#">
+              <p><i class="fa fa-envelope"></i>catherinesafrit@gmail.com</p>
+            </a>
+            <p><i class="fa fa-phone"></i> +345 578 59 45 416</p>
+            <p><i class="fa fa-home"></i> Enno inc | PO Box 23456 Little Lonsdale St, New York <br> Victoria 8011 USA</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="last-div">
+      <div class="container">
+        <div class="row">
+          <div class="copyright">
+            &copy; eNno Theme. All Rights Reserved
+            <div class="credits">
+              <!--
+                All the links in the footer should remain intact. 
+                You can delete the links only if you purchased the pro version.
+                Licensing information: https://bootstrapmade.com/license/
+                Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/buy/?theme=eNno
+              -->
+             <!-- Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>-->
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="container">
+        <div class="row">
+          <ul class="social-network">
+            <li><a href="#" data-placement="top" title="Github"><i class="fa fa-github fa-1x"></i></a></li>
+            <li><a href="#" data-placement="top" title="Gitlab"><i class="fa fa-gitlab fa-1x"></i></a></li>
+            <li><a href="https://www.linkedin.com/in/catherine-safrit" data-placement="top" title="Linkedin"><i class="fa fa-linkedin fa-1x"></i></a></li>
+            <li><a href="#" data-placement="top" title="Stack Overflow"><i class="fa fa-stack-overflow fa-1x"></i></a></li>
+            <li><a href="#" data-placement="top" title="Codepen"><i class="fa fa-codepen fa-1x"></i></a></li>
+          </ul>
+        </div>
+      </div>
+
+      <a href="" class="scrollup"><i class="fa fa-chevron-up"></i></a>
+
+
+    </div>
+  </footer>
+
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <script src="js/jquery-2.1.1.min.js"></script>
+  <!-- Include all compiled plugins (below), or include individual files as needed -->
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/wow.min.js"></script>
+  <script src="js/jquery.easing.1.3.js"></script>
+  <script src="js/jquery.isotope.min.js"></script>
+  <script src="js/jquery.bxslider.min.js"></script>
+  <script type="text/javascript" src="js/fliplightbox.min.js"></script>
+  <script src="js/functions.js"></script>
+  <script type="text/javascript">
+    $('.portfolio').flipLightBox()
+  
+  </script>
+
+</body>
+
 </html>
