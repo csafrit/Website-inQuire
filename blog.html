@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>inQuire</title>
 
-  <!-- Bootstrap -->
+ 
   <link href="css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/animate.css">
   <link rel="stylesheet" href="css/font-awesome.min.css">
@@ -18,12 +18,7 @@
   <link rel="stylesheet" type="text/css" href="css/demo.css" />
   <link rel="stylesheet" type="text/css" href="css/set1.css" />
   <link href="css/style.css" rel="stylesheet">
-  <!-- =======================================================
-    Theme Name: eNno
-    Theme URL: https://bootstrapmade.com/enno-free-simple-bootstrap-template/
-    Author: BootstrapMade
-    Author URL: https://bootstrapmade.com
-  ======================================================= -->
+
 </head>
 
 <body>
@@ -56,7 +51,7 @@
   <div class="container">
     <div class="row">
       <div class="col-md-6 col-md-offset-3">
-        <div class="blogs">
+        <div class="blogs" id = "blog1">
           <div class="text-center">
             <h2>Blog</h2>
             <p>Lorem ipsum dolor sit amet consectetur adipiscing elit Cras suscipit arcu<br> vestibulum volutpat libero sollicitudin vitae Curabitur ac aliquam <br>
@@ -68,28 +63,29 @@
     </div>
   </div>
 
-  <div class="container">
+  <div class="container" id = "blog1">
     <div class="row">
       <div class="col-md-8">
         <div class="page-header">
-          <div class="blog">
-            <h5>February,22 2015</h5>
+          <div class="blog" input id = "blog2">
+            <h5>July 30, 2019</h5>
             <img src="img/01.jpg" class="img-responsive" alt="" />
 
-            <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam,quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut
+                      <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam,quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut
               aliquip ex ea commodo consequat.</p>
 
-            <h3>Lorem ipsum dolor sit amet</h3>
+            <h3>Sunburst Traffic Fatality Visual</h3>
 
-            <p>Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore
-              te feugait nulla facilisi. Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Typi non habent claritatem insitam; est usus legentis in iis qui facit eorum claritatem.</p>
-
-            <p>Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Typi non habent claritatem insitam; est usus legentis in iis qui facit eorum.</p>
-
-            <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut
-              aliquip ex ea commodo consequat.</p>
+            <p>This graph is showcasing lighting and weather conditions for fatal car accidents throughout the nation for the timespan of a year. The data is compiled from the US Department of Transportation 2015 National dataset, which is the most recent data available. The dataset had 32,166 usable cases which had adequate information to incorporate into the graph. This number matches the total number of fatal car crashes reported on NHTSA (National Highway Traffic Safety Administration).<br /> <br /> 
+            It’s clear to see that the vast majority, 88% if you count both clear and cloudy cases - of fatal car accidents occur in clear conditions. That is, most people who die in car accidents will do so on clear sunny days when it’s nice outside and there is no precipitation such as rain or snow falling from the skies. Fog is considered precipitation in this instance and accounts for 1.5% of the 12% of fatal accidents which transpired in non-clear weather. Cloudy weather accounts for 15.3% of settings and 73% of lethal wrecks are in truly clear conditions.<span id="text"><br /> 
+            There was a nearly even split between daytime and nighttime conditions – with 5% more lethal accidents occurring during the daytime. Within the nighttime percentage, 10% more accidents occur in unlit than in lit settings. Ultimately, weather conditions have a much greater impact on collision fatality than lighting conditions. And in a slightly counterintuitive twist – it’s apparent that clear skies beckon fatal car accidents.<br /> <br />
+            Inferred reasons for why this might be the case could be that drivers have a false sense of security when skies are clear and are more prone to speeding or engaging in distracted driving habits such as checking their phones. It could be the case that drivers are more cautious when it’s raining and slow down to match the speed limits and focus more on the road and their surroundings during snow or rainfall. Of note – the data did reveal that most fatal car wrecks are single vehicular crashes, meaning one car collided with an object such as a barrier, wall or tree or lost control and spun off the road.<br /> <br />
+            Limitations from the data are that it’s slightly outdated. More recent data would be ideal to reflect the most current traffic and driving patterns. Another limitation is that this data contains only fatal car accidents. It would be interesting to compare the conditions for non-lethal injury wrecks or accidents where damage only occurred to vehicles to see how conditions varied in each situation. Adding in non-lethal accident data would exponentially increase the number of cases incorporated into the visual and would best be accomplished by linking the visual directly to a database instead of working off an exported dataset.<br /> <br />
+            Improvements which could be made to this visual would be adding a component to allow for comparison between lethal and non-lethal crashes. It would also be ideal to incorporate the single vs. multi-car collision data in this visual to highlight that most fatal car wrecks are single vehicular accidents. Additional factors which would be interesting to explore include timing such as time of day, day of week, time of year etc. or EMT response time. Comparing various combinations of data points could be accomplished by linking the visual to a database and creating a dashboard with multiple graphs for different data comparisons.<br /> 
+            </span></p>
+            
             <div class="ficon">
-              <a href="#" alt="">Learn more</a>
+                <button id="toggle"class="btn btn-default" role="button">Read More</button>
             </div>
           </div>
         </div>
@@ -111,12 +107,22 @@
       </div>
 
 
-
-
       <div class="col-md-4">
         <form class="form-search">
-          <input class="form-control" type="text" placeholder="Search..">
-        </form>
+          <input class="form-control" type="text" name = "search" placeholder="Search..."> </form><script src="./js/hilitor.js"></script>
+
+         <script>
+
+              window.addEventListener("DOMContentLoaded", function(e) {
+                var myHilitor2 = new Hilitor("blog1");
+                myHilitor2.setMatchType("left");
+                document.getElementById("blog2").addEventListener("keyup", function(e) {
+                  myHilitor2.apply(this.value);
+                }, false);
+              }, false);
+            
+            </script>
+       
         <div class="panel panel-default">
           <div class="panel-heading">
             <strong>Popular Posts</strong>
@@ -247,13 +253,7 @@
           <div class="copyright">
             &copy; eNno Theme. All Rights Reserved
             <div class="credits">
-              <!--
-                All the links in the footer should remain intact. 
-                You can delete the links only if you purchased the pro version.
-                Licensing information: https://bootstrapmade.com/license/
-                Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/buy/?theme=eNno
-              
-              Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>-->
+           
             </div>
           </div>
         </div>
